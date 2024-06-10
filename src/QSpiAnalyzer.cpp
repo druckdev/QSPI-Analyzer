@@ -157,6 +157,10 @@ bool QSpiAnalyzer::IsInitialClockPolarityCorrect()
     if (mSck->GetBitState() == mSettings->mClockIdle) {
         return true;
     }
+    else if (mSettings->mIgnoreInitialClkState) {
+        mSck->AdvanceToNextEdge();
+        return true;
+    }
 
     if (mSettings->mShowMarker) {
         mResults->AddMarker(mCurrentSample, AnalyzerResults::ErrorSquare, mSettings->mSckChannel);
