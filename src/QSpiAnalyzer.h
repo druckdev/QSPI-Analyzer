@@ -34,7 +34,7 @@ protected: //functions
     void Setup();
     void AdvanceToActiveEnableEdge();
     bool IsInitialClockPolarityCorrect();
-    void AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
+    void AdvanceToActiveEnableEdgeWithCorrectClockPolarity(bool stop_marker);
     bool WouldAdvancingTheClockToggleEnable();
 
     void GetBlock();    
