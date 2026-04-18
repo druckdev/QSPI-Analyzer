@@ -50,6 +50,14 @@ void QSpiAnalyzer::WorkerThread()
         mCurrentSample = mCs->GetSampleNumber();
         mSck->AdvanceToAbsPosition(mCurrentSample == 0 ? 0 : mCurrentSample - 1);
         MarkChannels(mCs->GetSampleNumber(), AnalyzerResults::Start, mStartStopMask);
+
+#if defined(LOGIC2) && (SOFTWARE == SALEAE)
+        FrameV2 enable_frame;
+        U64 enable_edge = mCs->GetSampleNumber();
+        mResults->AddFrameV2(enable_frame, "enable", enable_edge, enable_edge + 1);
+#endif
+
+        mResults->CommitResults();
     } else {
         mCurrentSample = mSck->GetSampleNumber();
     }
@@ -82,8 +90,18 @@ void QSpiAnalyzer::WorkerThread()
     }
 }
 
-void QSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
+void QSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity(bool stop_marker)
 {
+    if (stop_marker) {
+        MarkChannels(mCs->GetSampleOfNextEdge(), AnalyzerResults::Stop, mStartStopMask);
+
+#if defined(LOGIC2) && (SOFTWARE == SALEAE)
+        FrameV2 disable_frame;
+        U64 disable_edge = mCs->GetSampleOfNextEdge();
+        mResults->AddFrameV2(disable_frame, "disable", disable_edge, disable_edge + 1);
+#endif
+    }
+
     mResults->CommitPacketAndStartNewPacket();
     mResults->CommitResults();
 
@@ -96,6 +114,14 @@ void QSpiAnalyzer::AdvanceToActiveEnableEdgeWithCorrectClockPolarity()
     }
 
     MarkChannels(mCs->GetSampleNumber(), AnalyzerResults::Start, mStartStopMask);
+
+#if defined(LOGIC2) && (SOFTWARE == SALEAE)
+    FrameV2 enable_frame;
+    U64 enable_edge = mCs->GetSampleNumber();
+    mResults->AddFrameV2(enable_frame, "enable", enable_edge, enable_edge + 1);
+#endif
+
+    mResults->CommitResults();
 }
 
 void QSpiAnalyzer::Setup()
@@ -241,8 +267,7 @@ void QSpiAnalyzer::GetBlock()
                 break;
             }
 
-            MarkChannels(mCs->GetSampleOfNextEdge(), AnalyzerResults::Stop, mStartStopMask);
-            AdvanceToActiveEnableEdgeWithCorrectClockPolarity();  //ok, we pretty much need to reset everything and return.
+            AdvanceToActiveEnableEdgeWithCorrectClockPolarity(true);  //ok, we pretty much need to reset everything and return.
             return;
         }
 
@@ -302,9 +327,7 @@ void QSpiAnalyzer::GetBlock()
                 break;
             }
 
-            MarkChannels(mCs->GetSampleOfNextEdge(), AnalyzerResults::Stop, mStartStopMask);
-
-            AdvanceToActiveEnableEdgeWithCorrectClockPolarity();  //ok, we pretty much need to reset everything and return.
+            AdvanceToActiveEnableEdgeWithCorrectClockPolarity(true);  //ok, we pretty much need to reset everything and return.
             return;
         }
 
@@ -395,8 +418,7 @@ void QSpiAnalyzer::GetBlock()
     }
 
     if (need_reset == true) {
-        MarkChannels(mCs->GetSampleOfNextEdge(), AnalyzerResults::Stop, mStartStopMask);
-        AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
+        AdvanceToActiveEnableEdgeWithCorrectClockPolarity(true);
     }
 }
 
@@ -421,7 +443,7 @@ void QSpiAnalyzer::GetDummyBlock()
             if (mTransactionState == QSpiTypes::DATA_STATE)
                 break;
 
-            AdvanceToActiveEnableEdgeWithCorrectClockPolarity();  //ok, we pretty much need to reset everything and return.
+            AdvanceToActiveEnableEdgeWithCorrectClockPolarity(false);  //ok, we pretty much need to reset everything and return.
             return;
         }
 
@@ -451,7 +473,7 @@ void QSpiAnalyzer::GetDummyBlock()
 
         //this isn't the very last bit, etc, so proceed as normal
         if (WouldAdvancingTheClockToggleEnable() == true) {
-            AdvanceToActiveEnableEdgeWithCorrectClockPolarity();  //ok, we pretty much need to reset everything and return.
+            AdvanceToActiveEnableEdgeWithCorrectClockPolarity(false);  //ok, we pretty much need to reset everything and return.
             return;
         }
 
@@ -486,7 +508,7 @@ void QSpiAnalyzer::GetDummyBlock()
     AdvanceState();
 
     if (need_reset == true) {
-        AdvanceToActiveEnableEdgeWithCorrectClockPolarity();
+        AdvanceToActiveEnableEdgeWithCorrectClockPolarity(false);
     }
 }
 
