@@ -61,7 +61,6 @@ public:
 
     U32 mCsPreCycles;
     U32 mCsPostCycles;
-    bool  mIgnoreInitialClkState;
     bool  mShowMarker;
 
 protected:
@@ -91,7 +90,6 @@ protected:
 	std::unique_ptr< AnalyzerSettingInterfaceNumberList > mCsPreEnabledInterface;
 	std::unique_ptr< AnalyzerSettingInterfaceNumberList > mCsPostEnabledInterface;
 
-    std::unique_ptr< AnalyzerSettingInterfaceBool > mIgnoreInitialClkStateInterface;
 
     std::unique_ptr< AnalyzerSettingInterfaceBool > mUseShowMarkerInterface;
 };
