@@ -349,6 +349,7 @@ void QSpiAnalyzer::GetBlock()
 
 #if defined(LOGIC2) && (SOFTWARE == SALEAE)
     FrameV2 frame_v2;
+
     const char* state_str;
     switch (mTransactionState)
     {
@@ -371,10 +372,20 @@ void QSpiAnalyzer::GetBlock()
             state_str = "UNDEFINED";
             break;
     }
-
-    frame_v2.AddInteger("data", data_word);
     frame_v2.AddString("state", state_str);
-    mResults->AddFrameV2(frame_v2, "data_byte", result_frame.mStartingSampleInclusive, result_frame.mEndingSampleInclusive);
+
+    if (bits_per_transfer <= 8) {
+        frame_v2.AddByte("data", data_word);
+    } else {
+        U32 bytes_per_transfer = (bits_per_transfer + 7) / 8;
+        U8 data_bytearray[(QSpiAnalyzerSettings::MaxTransferBits + 7) / 8];
+        for (int i = 0; i < bytes_per_transfer; ++i) {
+            data_bytearray[i] = data_word >> (8 * (bytes_per_transfer - i - 1));
+        }
+        frame_v2.AddByteArray("data", data_bytearray, bytes_per_transfer);
+    }
+
+    mResults->AddFrameV2(frame_v2, "data", result_frame.mStartingSampleInclusive, result_frame.mEndingSampleInclusive);
 #endif
 
     mResults->CommitResults();

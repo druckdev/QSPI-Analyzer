@@ -81,7 +81,7 @@ QSpiAnalyzerSettings::QSpiAnalyzerSettings()
     mCsPostEnabledInterface->SetTitleAndTooltip("Post CS Clocks", "Specify how many clock cycles CS will stay active after transmission");
     mCsPostEnabledInterface->SetNumber(mCsPostCycles);
 
-    for (int i = 0; i <= 64; i++)
+    for (int i = 0; i <= MaxTransferBits; i++)
     {
         char data[4];
         snprintf(data, 4, "%d", i);

@@ -53,6 +53,7 @@ public:
     U32 mAddressBits;
     U32 mDummyBits;
     U32 mDataBits;
+    static constexpr U32 MaxTransferBits = 64;
 
     QSpiTypes::IOMode mCommandIOMode;
     QSpiTypes::IOMode mAddressIOMode;
